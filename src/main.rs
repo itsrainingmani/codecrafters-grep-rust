@@ -9,6 +9,13 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
         // Match on different character classes
         match pattern {
             "\\d" => input_line.chars().filter(|c| c.is_digit(10)).count() > 0,
+            "\\w" => {
+                input_line
+                    .chars()
+                    .filter(|c| c.is_ascii_alphanumeric())
+                    .count()
+                    > 0
+            }
             _ => {
                 panic!("Unhandled Pattern")
             }

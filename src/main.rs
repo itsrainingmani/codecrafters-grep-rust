@@ -6,7 +6,13 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
     if pattern.chars().count() == 1 {
         return input_line.contains(pattern);
     } else {
-        panic!("Unhandled pattern: {}", pattern)
+        // Match on different character classes
+        match pattern {
+            "\\d" => input_line.chars().filter(|c| c.is_digit(10)).count() > 0,
+            _ => {
+                panic!("Unhandled Pattern")
+            }
+        }
     }
 }
 
@@ -27,8 +33,10 @@ fn main() {
 
     // Uncomment this block to pass the first stage
     if match_pattern(&input_line, &pattern) {
+        // println!("Pattern Found");
         process::exit(0)
     } else {
+        // println!("Pattern not found");
         process::exit(1)
     }
 }

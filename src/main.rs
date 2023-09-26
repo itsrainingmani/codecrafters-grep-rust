@@ -66,3 +66,48 @@ fn main() {
         process::exit(1)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn _literal() {
+        let input_line: &str = "apple123";
+        let pattern: &str = "a";
+
+        assert_eq!(match_pattern(input_line, pattern), true);
+    }
+
+    #[test]
+    fn match_digits() {
+        let input_line: &str = "apple123";
+        let pattern: &str = "\\d";
+
+        assert_eq!(match_pattern(input_line, pattern), true);
+    }
+
+    #[test]
+    fn match_alphanumerics() {
+        let input_line: &str = "alpha-num3ric";
+        let pattern: &str = "\\w";
+
+        assert_eq!(match_pattern(input_line, pattern), true);
+    }
+
+    #[test]
+    fn match_positive_group() {
+        let input_line: &str = "apple123";
+        let pattern: &str = "[abc]";
+
+        assert_eq!(match_pattern(input_line, pattern), true);
+    }
+
+    #[test]
+    fn match_negative_group() {
+        let input_line: &str = "hello";
+        let pattern: &str = "[^abc]";
+
+        assert_eq!(match_pattern(input_line, pattern), true);
+    }
+}

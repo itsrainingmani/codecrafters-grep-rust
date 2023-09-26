@@ -17,7 +17,18 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
                     > 0
             }
             _ => {
-                panic!("Unhandled Pattern")
+                if pattern.starts_with('[') && pattern.ends_with(']') {
+                    let positive_char_group: Vec<_> = pattern
+                        .strip_prefix('[')
+                        .expect("Pattern should start with [")
+                        .strip_suffix(']')
+                        .expect("Pattern should end with ]")
+                        .chars()
+                        .collect();
+                    input_line.chars().any(|c| positive_char_group.contains(&c))
+                } else {
+                    panic!("Unhandled Pattern");
+                }
             }
         }
     }

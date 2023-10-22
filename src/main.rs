@@ -13,6 +13,7 @@ enum Pattern {
     PositiveGroup(String),
     NegativeGroup(String),
     Normal(char),
+    LineAnchor,
 }
 
 fn parse_pattern(pattern: &str) -> Vec<Pattern> {
@@ -56,6 +57,10 @@ fn parse_pattern(pattern: &str) -> Vec<Pattern> {
             patt_vec.push(cur_pattern);
 
             patt_pos = pos_end_group + 1;
+        } else if cur_char.eq(&'^') {
+            // Start of String or Line anchor
+            patt_vec.push(Pattern::LineAnchor);
+            patt_pos += 1;
         } else {
             cur_pattern = Pattern::Normal(*cur_char);
             patt_vec.push(cur_pattern);
@@ -71,24 +76,36 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
         // Single Char matching
         return input_line.contains(pattern);
     } else {
-        let mut input_chars = input_line.trim().chars().enumerate();
+        let input_chars = input_line.trim_end().chars().collect::<Vec<char>>();
         let patterns = parse_pattern(pattern);
         println!("{:?}", &patterns);
 
+        let mut char_idx = 0;
         let mut patt_idx = 0;
 
-        while let Some((char_idx, cur_char)) = input_chars.next() {
+        let first_patt = patterns.first().unwrap();
+
+        if matches!(first_patt, Pattern::LineAnchor) {
+            patt_idx += 1;
+        }
+
+        while let Some(cur_char) = input_chars.get(char_idx) {
             if let Some(p) = patterns.get(patt_idx) {
+                println!("{:?} - {:?} | {:?} - {:?}", cur_char, p, char_idx, patt_idx);
                 let is_match = match p {
                     Pattern::Digit => cur_char.is_digit(10),
                     Pattern::Alphanumeric => cur_char.is_alphanumeric(),
-                    Pattern::PositiveGroup(grp) => grp.contains(cur_char),
-                    Pattern::NegativeGroup(grp) => !grp.contains(cur_char),
+                    Pattern::PositiveGroup(grp) => grp.contains(*cur_char),
+                    Pattern::NegativeGroup(grp) => !grp.contains(*cur_char),
                     Pattern::Normal(c) => cur_char.eq(c),
+                    Pattern::LineAnchor => {
+                        // If we see a line anchor at any point except the start of the
+                        // pattern matching, we're done
+                        return false;
+                    }
                 };
 
                 if is_match {
-                    // println!("{:?} - {:?} | {:?} - {:?}", cur_char, p, char_idx, patt_idx);
                     patt_idx += 1;
                 } else {
                     patt_idx = 0;
@@ -99,6 +116,7 @@ fn match_pattern(input_line: &str, pattern: &str) -> bool {
                 }
                 patt_idx = 0;
             }
+            char_idx += 1;
         }
 
         // println!("{:?}", patt_idx);

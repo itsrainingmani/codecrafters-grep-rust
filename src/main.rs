@@ -6,6 +6,7 @@ use std::process;
 enum Pattern {
     Digit,
     Alphanumeric,
+    Alternates(Vec<Vec<Pattern>>),
     PositiveGroup(String),
     NegativeGroup(String),
     ZeroOrOne(char),
@@ -35,6 +36,17 @@ fn parse_pattern(pattern: &str) -> Vec<Pattern> {
                 } else {
                     panic!("Unhandled Pattern");
                 }
+            }
+            '(' => {
+                let pos_end_group = patt_chars
+                    .iter()
+                    .position(|&x| x == ')')
+                    .expect("Unhandled Pattern");
+                let inside_chars: String = patt_chars[patt_pos + 1..pos_end_group].iter().collect();
+                cur_pattern = Pattern::Alternates(
+                    inside_chars.split('|').map(|s| parse_pattern(&s)).collect(),
+                );
+                patt_pos = pos_end_group + 1;
             }
             '[' => {
                 // Look for char groups
@@ -115,6 +127,9 @@ fn match_pattern(input_line: &str, patterns: &Vec<Pattern>) -> bool {
             let is_match = match p {
                 Pattern::Digit => cur_char.is_digit(10),
                 Pattern::Alphanumeric => cur_char.is_alphanumeric(),
+                Pattern::Alternates(alt_patts) => {
+                    alt_patts.iter().any(|a| match_pattern(input_line, &a))
+                }
                 Pattern::PositiveGroup(grp) => grp.contains(*cur_char),
                 Pattern::NegativeGroup(grp) => !grp.contains(*cur_char),
                 Pattern::Symbol(c) => cur_char.eq(c),

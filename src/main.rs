@@ -10,6 +10,7 @@ enum Pattern {
     NegativeGroup(String),
     ZeroOrOne(char),
     OneOrMore(char),
+    WildCard,
     Symbol(char),
     StartAnchor,
     EndAnchor,
@@ -62,6 +63,10 @@ fn parse_pattern(pattern: &str) -> Vec<Pattern> {
             '$' => {
                 // End of String or Line anchor
                 cur_pattern = Pattern::EndAnchor;
+                patt_pos += 1;
+            }
+            '.' => {
+                cur_pattern = Pattern::WildCard;
                 patt_pos += 1;
             }
             _ => {
@@ -147,6 +152,7 @@ fn match_pattern(input_line: &str, patterns: &Vec<Pattern>) -> bool {
                     return false;
                 }
                 Pattern::EndAnchor => false,
+                Pattern::WildCard => cur_char.is_ascii(),
             };
 
             if is_match {

@@ -8,6 +8,7 @@ enum Pattern {
     Alphanumeric,
     PositiveGroup(String),
     NegativeGroup(String),
+    ZeroOrOne(char),
     OneOrMore(char),
     Symbol(char),
     StartAnchor,
@@ -65,14 +66,16 @@ fn parse_pattern(pattern: &str) -> Vec<Pattern> {
             }
             _ => {
                 if let Some(c) = patt_chars.get(patt_pos + 1) {
-                    if c.eq(&'+') {
-                        cur_pattern = Pattern::OneOrMore(*cur_char);
-                        patt_pos += 1;
-                    // } else if c.eq(&'?') {
-                    //     cur_pattern = Pattern::ZeroOrMore(*cur_char);
-                    //     patt_pos += 1;
-                    } else {
-                        cur_pattern = Pattern::Symbol(*cur_char);
+                    match c {
+                        '?' => {
+                            cur_pattern = Pattern::ZeroOrOne(*cur_char);
+                            patt_pos += 1;
+                        }
+                        '+' => {
+                            cur_pattern = Pattern::OneOrMore(*cur_char);
+                            patt_pos += 1;
+                        }
+                        _ => cur_pattern = Pattern::Symbol(*cur_char),
                     }
                 } else {
                     cur_pattern = Pattern::Symbol(*cur_char);
@@ -119,13 +122,23 @@ fn match_pattern(input_line: &str, patterns: &Vec<Pattern>) -> bool {
                         if quant_count >= 1 {
                             // the one or more test has been met
                             // move on to check the next pattern
+                            quant_count = 0;
                             patt_idx += 1;
                             continue;
                         } else {
                             // one or more test has not been met
                             // false match -> reset pattern checking
+                            quant_count = 0;
                             false
                         }
+                    }
+                }
+                Pattern::ZeroOrOne(c) => {
+                    if *c == *cur_char {
+                        true
+                    } else {
+                        patt_idx += 1;
+                        continue;
                     }
                 }
                 Pattern::StartAnchor => {
